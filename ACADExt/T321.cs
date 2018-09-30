@@ -20,10 +20,7 @@ using System.Collections;
 namespace ACADExt
 {
     public class T321
-    {
-        
-
-
+    {    
 
         [CommandMethod("T321BlocksDef")]
         public static void BlocksDef()
