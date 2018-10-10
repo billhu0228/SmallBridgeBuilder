@@ -153,7 +153,7 @@ namespace ACADExt
                 // 表格
                 TheBridge.PlotNumTB(db, Point2d.Origin.Convert2D(420+310, (ii - 1) * (-297)+240));
 
-
+                TheBridge.PlotMatTB(db, Point2d.Origin.Convert2D(420 + 620, (ii - 1) * (-297) + 240));
 
 
             }
@@ -188,7 +188,8 @@ namespace ACADExt
             Bridge TheBridge;
             System.Data.DataTable Parameters = new System.Data.DataTable();
 
-            string rootDir = BPublicFunctions.GetPath("选择路径");
+            string rootDir = BPublicFunctions.GetPath("选择Ansys路径");
+            string latexDir = BPublicFunctions.GetPath("选择Latex路径");
 
             string aa = BPublicFunctions.GetXPath("选择参数表", "参数表|*.xls");
             if (aa == "")
@@ -210,17 +211,28 @@ namespace ACADExt
                 bill.GenerateModel();
                 bill.GenerateSection();
                 bill.WriteMain(wdir);
+                bill.WritePrep(wdir);
                 bill.WriteNode(wdir);
                 bill.WriteSect(wdir);
                 bill.WriteElem(wdir);
-                //break;
+                bill.WriteDebug(wdir);
+                bill.WriteSolu(wdir);
+                bill.WriteSM1600(wdir);
+                bill.WritePost(wdir);
+              
+
+
+                LatexGen kitty = new LatexGen(TheBridge);
+                string filewdir=kitty.GetReady(latexDir);
+                kitty.WriteTex(filewdir);
+                //kitty.RunXeLatex(filewdir, Path.Combine(filewdir,"CalSheet.tex"));
+
+
+                break;
 
 
             }
+
         }
-
-
-
-
     }
 }

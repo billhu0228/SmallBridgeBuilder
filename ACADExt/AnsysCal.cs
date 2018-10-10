@@ -101,7 +101,7 @@ namespace ACADExt
         int Num_Node;
         int Num_Elem;
         int Num_Sect;
-
+        List<int> BeamToLoad;
 
         public AnsysCal(Bridge bri)
         {
@@ -112,6 +112,30 @@ namespace ACADExt
             NodeList = new List<Node>();
             BeamList = new List<Beam>();
             SectList = new List<Section>();
+            int totbeam = bri.Pieces * 2 + 1;
+            BeamToLoad = new List<int>() { (totbeam - 1) / 2 - 1, (totbeam - 1) / 2, (totbeam - 1) / 2 + 1 };
+
+            //if (bri.Pieces < 4)
+            //{
+            //    int totbeam = bri.Pieces * 2 + 1;
+            //    BeamToLoad = new List<int>() { (totbeam - 1) / 2 - 1, (totbeam - 1) / 2, (totbeam - 1) / 2 + 1 };
+            //}
+            //else if (bri.Pieces < 7)
+            //{
+            //    int midbeam = bri.Pieces;
+            //    BeamToLoad = new List<int>() { midbeam - 1, midbeam - 2, midbeam - 3, midbeam + 1, midbeam + 2, midbeam + 3 };
+            //}
+            //else if (bri.Pieces < 10)
+            //{
+            //    int midbeam = bri.Pieces;
+            //    BeamToLoad = new List<int>() { midbeam - 1, midbeam + 1, midbeam, midbeam - 3, midbeam - 4, midbeam - 5, midbeam + 3, midbeam + 4, midbeam + 5 };
+            //}
+            //else
+            //{
+            //    int midbeam = bri.Pieces;
+            //    BeamToLoad = new List<int>() { midbeam - 1, midbeam - 2, midbeam - 3, midbeam -5, midbeam - 6, midbeam - 7,
+            //         midbeam + 1, midbeam + 2, midbeam + 3, midbeam +5, midbeam +6, midbeam + 7 };
+            //}
         }
 
 
@@ -190,12 +214,14 @@ namespace ACADExt
                 for (int kk = 0; kk < 2; kk++)
                 {
                     MakeDeck(ii, kk, ref nkup);
-                }
-                //double x0
+                }               
             }
             MakeDeck(curBridge.Pieces, 0, ref nkup);
 
-
+            for (int ii = 0; ii < curBridge.Pieces; ii++)
+            {
+                MakeLink(ii);
+            }
 
 
 
@@ -351,6 +377,24 @@ namespace ACADExt
 
 
 
+
+
+        private void MakeLink(int ii)
+        {
+            var n1 = from item in NodeList where item.X == ii * 3000 && item.Z == 2100 select item;
+            var n2 = from item in NodeList where item.X == ii * 3000 && item.Z == -2100 select item;
+            var n3 = from item in NodeList where item.X == ii * 3000+3000 && item.Z == 2100 select item;
+            var n4 = from item in NodeList where item.X == ii * 3000+3000 && item.Z == -2100 select item;
+            Beam elem;
+            elem = new Beam(Num_Elem, n1.First(), n4.First(),null, 10, 1, "");
+            BeamList.Add(elem);
+            Num_Elem++;
+
+            elem = new Beam(Num_Elem, n2.First(), n3.First(), null, 10, 1, "");
+            BeamList.Add(elem);
+            Num_Elem++;
+
+        }
 
 
         /// <summary>
@@ -720,7 +764,8 @@ namespace ACADExt
 
         public string AnsysCalculator(string rootDir)
         {
-            string wdir = Path.Combine(rootDir, curBridge.Name);
+            string wdir = Path.Combine(rootDir, curBridge.Name);            
+
             if (Directory.Exists(wdir))
             {
                 DelectDir(wdir);
@@ -743,7 +788,29 @@ namespace ACADExt
                     sw.WriteLine("!=======================================================");
                     sw.WriteLine("finish");
                     sw.WriteLine("/CLEAR,START");
-                    sw.WriteLine("/CWD,'{0}'",filepath);
+                    sw.WriteLine("/CWD,'{0}'",filepath);                
+                    sw.WriteLine("!=======================================================");
+                    sw.WriteLine("/input,Prep,inp");
+                    sw.WriteLine("/input,Sect,inp");
+                    sw.WriteLine("/input,Node,inp");
+                    sw.WriteLine("/input,Elem,inp");
+                    sw.WriteLine("/input,Debug,inp");
+                    sw.WriteLine("/input,Solu,inp");
+                    sw.WriteLine("/input,Post,inp");
+                }
+            }
+        }
+
+
+
+
+        public void WritePrep(string filepath)
+        {
+            using (FileStream fs = new FileStream(Path.Combine(filepath, "Prep.inp"),
+                FileMode.Create, FileAccess.Write))
+            {
+                using (StreamWriter sw = new StreamWriter(fs))
+                {
                     sw.WriteLine("/prep7");
                     sw.WriteLine("MP,EX,  1,2.0E5");
                     sw.WriteLine("MP,DENS,1,7.85e-9");
@@ -754,21 +821,87 @@ namespace ACADExt
                     sw.WriteLine("MP,ALPX,2,1.2E-5");
                     sw.WriteLine("MP,NUXY,2,0.3");
                     sw.WriteLine("et,1,188");
-                    sw.WriteLine("!=======================================================");
-                    sw.WriteLine("/input,Sect,inp");
-                    sw.WriteLine("/input,Node,inp");
-                    sw.WriteLine("/input,Elem,inp");
-                    sw.WriteLine("allsel");
-                    sw.WriteLine("eplot");
-                    sw.WriteLine("nummrg,node");
-
-
-
+                    sw.WriteLine("et,2,21,,,2");
                 }
             }
         }
 
 
+
+
+        public void WriteDebug(string filepath)
+        {
+            using (FileStream fs = new FileStream(Path.Combine(filepath, "Debug.inp"),
+                FileMode.Create, FileAccess.Write))
+            {
+                using (StreamWriter sw = new StreamWriter(fs))
+                {
+                    sw.BaseStream.Seek(0, SeekOrigin.End);
+                    sw.WriteLine("/prep7");
+                    sw.WriteLine("allsel");
+                    sw.WriteLine("eplot");
+                    sw.WriteLine("nummrg,node");
+                    for (int i = 0; i < curBridge.Columns; i++)
+                    {
+                        foreach (var ss in new List<string>() { "ux","uy","uz"})
+                        {
+                            if (i == 0)
+                            {
+                                sw.WriteLine("d,node(0,0,2100),{0},0",ss);
+                                sw.WriteLine("d,node(0,0,-2100),{0},0",ss);
+                                sw.WriteLine("d,node({1},0,2100),{0},0",ss, curBridge.Pieces * 3000.0);
+                                sw.WriteLine("d,node({1},0,-2100),{0},0",ss, curBridge.Pieces * 3000.0);
+                            }
+                            if (i == 1)
+                            {
+                                sw.WriteLine("d,node(0,0,2550),{0},0", ss);
+                                sw.WriteLine("d,node(0,0,-2550),{0},0", ss);
+                                sw.WriteLine("d,node({1},0,2550),{0},0", ss, curBridge.Pieces * 3000.0);
+                                sw.WriteLine("d,node({1},0,-2550),{0},0", ss, curBridge.Pieces * 3000.0);
+                            }
+                            if (i == 2)
+                            {
+                                sw.WriteLine("d,node(0,0,2800),{0},0", ss);
+                                sw.WriteLine("d,node(0,0,-2800),{0},0", ss);
+                                sw.WriteLine("d,node({1},0,2800),{0},0", ss, curBridge.Pieces * 3000.0);
+                                sw.WriteLine("d,node({1},0,-2800),{0},0", ss, curBridge.Pieces * 3000.0);
+                            }
+                        }                        
+                    }
+                    sw.WriteLine("allsel");
+                    sw.WriteLine("wdeck=(259.49*4+26.78*2+158.59)*{0}/1000.0",curBridge.Pieces);
+                    sw.WriteLine("nsel,s,loc,y,0");
+                    sw.WriteLine("*get,npts,node,0,count");
+                    sw.WriteLine("r,2,wdeck/npts");
+                    sw.WriteLine("cm,deck,node");
+                    sw.WriteLine("type,2");
+                    sw.WriteLine("real,2");
+                    sw.WriteLine("*do,i,1,npts");
+                    sw.WriteLine("nn=node(0,0,0)");
+                    sw.WriteLine("e,nn");
+                    sw.WriteLine("nsel,u,node,,nn");                    
+                    sw.WriteLine("*enddo");
+
+                    sw.WriteLine("allsel");
+                    sw.WriteLine("wtruss=0.74*{0}*{1}*{2}", curBridge.Pieces, curBridge.Columns, curBridge.Layers);
+                    sw.WriteLine("nsel,s,loc,y,100,9000");
+                    sw.WriteLine("*get,npts,node,0,count");
+                    sw.WriteLine("r,3,wtruss/npts");
+                    sw.WriteLine("cm,undeck,node");
+                    sw.WriteLine("type,2");
+                    sw.WriteLine("real,3");
+                    sw.WriteLine("*do,i,1,npts");
+                    sw.WriteLine("nn=node(0,0,0)");
+                    sw.WriteLine("e,nn");
+                    sw.WriteLine("nsel,u,node,,nn");
+                    sw.WriteLine("*enddo");
+
+                    sw.WriteLine("allsel");
+                    sw.WriteLine("type,1");
+                    sw.WriteLine("real,1");
+                }
+            }
+        }
 
 
         public void WriteSect(string filepath)
@@ -813,9 +946,6 @@ namespace ACADExt
                         {
                             sw.WriteLine("SECDATA,{0},0,0,0,0,0,0,0,0,0,0,0",item.W1);
                         }
-
-
-
                     }
                 }
             }
@@ -852,11 +982,13 @@ namespace ACADExt
                     {
                         if (item.Nk == null)
                         {
+                            sw.WriteLine("mat,{0}", item.MatN);
                             sw.WriteLine("secn,{0}", item.SecN);
                             sw.WriteLine("e,{0},{1}", item.Ni.ID, item.Nj.ID);
                         }
                         else
                         {
+                            sw.WriteLine("mat,{0}", item.MatN);
                             sw.WriteLine("secn,{0}", item.SecN);
                             sw.WriteLine("e,{0},{1},{2}", item.Ni.ID, item.Nj.ID, item.Nk.ID);
                         }
@@ -866,6 +998,114 @@ namespace ACADExt
         }
 
 
+
+        public void WriteSolu(string filepath,double PEF=1.1,double MLF=1.8,double TLF=1.0)
+        {
+            using (FileStream fs = new FileStream(Path.Combine(filepath, "Solu.inp"),
+                FileMode.Create, FileAccess.Write))
+            {
+                using (StreamWriter sw = new StreamWriter(fs))
+                {
+                    sw.WriteLine("/solu");
+                    sw.WriteLine("PE={0}", PEF);
+                    sw.WriteLine("ML={0}", MLF);
+                    sw.WriteLine("TL={0}", TLF);
+                    sw.WriteLine("acel,0,0,0");
+                    sw.WriteLine("fdele,all,all");
+                    sw.WriteLine("fcum,add");
+                    sw.WriteLine("allsel");
+                    sw.WriteLine("acel,0,9800*PE,0");
+                    sw.WriteLine("UDL=6*3000*{0}*ML", curBridge.Pieces);
+                    sw.WriteLine("cmsel,s,deck");
+                    sw.WriteLine("*get,npts,node,0,count");
+                    sw.WriteLine("f,all,fy,-udl/npts");
+                    sw.WriteLine("allsel");
+                    foreach (var item in BeamToLoad)
+                    {
+                        double x = item * 1500;
+                        sw.WriteLine("node1=node({0},0, 1050.0)", x);
+                        sw.WriteLine("node2=node({0},0,-1050.0)", x);
+                        sw.WriteLine("f,node1,fy,-60000*ML");
+                        sw.WriteLine("f,node2,fy,-60000*ML");
+                    }
+                    sw.WriteLine("esel,s,mat,,1");
+                    sw.WriteLine("esel,r,type,,1");
+                    sw.WriteLine("BFE, all, TEMP, 1,46*TL");
+                    sw.WriteLine("fcum,repl");
+                    sw.WriteLine("allsel");
+                    sw.WriteLine("solve");
+                    sw.WriteLine("finish");
+                }
+            }
+        }
+
+        public void WriteSM1600(string filepath)
+        {
+            using (FileStream fs = new FileStream(Path.Combine(filepath, "SM1600.inp"),
+                FileMode.Create, FileAccess.Write))
+            {
+                using (StreamWriter sw = new StreamWriter(fs))
+                {
+                    sw.WriteLine("/solu");
+                    sw.WriteLine("acel,0,0,0");
+                    sw.WriteLine("fdele,all,all");
+                    sw.WriteLine("fcum,add");
+                    sw.WriteLine("UDL=6*3000*{0}",curBridge.Pieces);
+                    sw.WriteLine("cmsel,s,deck");
+                    sw.WriteLine("*get,npts,node,0,count");
+                    sw.WriteLine("f,all,fy,-udl/npts");
+                    sw.WriteLine("allsel");
+                    foreach (var item in BeamToLoad)
+                    {
+                        double x = item * 1500;                        
+                        sw.WriteLine("node1=node({0},0, 1050.0)", x);
+                        sw.WriteLine("node2=node({0},0,-1050.0)", x);
+                        sw.WriteLine("f,node1,fy,-60000");
+                        sw.WriteLine("f,node2,fy,-60000");
+                    }
+                    sw.WriteLine("fcum,repl");
+                    sw.WriteLine("allsel");
+                    sw.WriteLine("solve");
+                    sw.WriteLine("finish");
+                }
+            }
+        }
+        public void WritePost(string filepath)
+        {
+            using (FileStream fs = new FileStream(Path.Combine(filepath, "Post.inp"),
+                FileMode.Create, FileAccess.Write))
+            {
+                using (StreamWriter sw = new StreamWriter(fs))
+                {
+                    sw.WriteLine("/RGB,INDEX,100,100,100, 0");
+                    sw.WriteLine("/RGB,INDEX, 80, 80, 80,13");
+                    sw.WriteLine("/RGB,INDEX, 60, 60, 60,14");
+                    sw.WriteLine("/RGB,INDEX, 0, 0, 0,15");
+                    sw.WriteLine("/REPLOT");
+                    sw.WriteLine("/post1");
+                    sw.WriteLine("esel,s,mat,,1");
+                    sw.WriteLine("esel,r,type,,1");
+                    sw.WriteLine("nsel,u,node,,9999");
+                    sw.WriteLine("nsel,u,node,,8888");
+                    sw.WriteLine("/eshape,1");
+                    sw.WriteLine("eplot");
+                    sw.WriteLine("/VIEW,1,1,1,1");
+                    sw.WriteLine("/ANG,1");
+                    sw.WriteLine("/REP,FAST");
+                    sw.WriteLine("/AUTO,1");
+                    sw.WriteLine("/REP,FAST");
+                    sw.WriteLine(@"/IMAGE,save,'..\..\05 Latex\{0}\pic\1','png'", curBridge.Name);
+                    sw.WriteLine("etab,sdirA,smisc,31");
+                    sw.WriteLine("etab,sdirB,smisc,36");
+                    sw.WriteLine("plls,sdirA,sdirB,0.1");
+                    sw.WriteLine("/VIEW,1,,,1 ");
+                    sw.WriteLine("/ANG,1  ");
+                    sw.WriteLine("/REP,FAST   ");
+                    sw.WriteLine(@"/IMAGE,save,'..\..\05 Latex\{0}\pic\2','png'", curBridge.Name);
+
+                }
+            }
+        }
 
 
 

@@ -36,6 +36,39 @@ namespace ACADExt
             }
         }
 
+        public string TypeString()
+        {
+            string ret="";
+            if (Columns == 1)
+            {
+                ret += "S";
+            }
+            else if(Columns==2)
+            {
+                ret += "D";
+            }
+            else
+            {
+                ret += "T";
+            }
+            if (Layers == 1)
+            {
+                ret += "S";
+            }
+            else if (Layers == 2)
+            {
+                ret += "D";
+            }
+            else
+            {
+                ret += "T";
+            }
+            if (IsEnhence)
+            {
+                ret += "R";
+            }
+            return ret;
+        }
         public static System.Data.DataTable MatTab;
         public static System.Data.DataTable NumTab;
 

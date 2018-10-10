@@ -78,6 +78,7 @@
     <Compile Include="BPublicFunctions.cs" />
     <Compile Include="Bridge.cs" />
     <Compile Include="DimPloter.cs" />
+    <Compile Include="LatexGen.cs" />
     <Compile Include="MainApp.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="HBD60.cs" />
