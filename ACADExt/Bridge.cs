@@ -24,6 +24,25 @@ namespace ACADExt
         public bool IsEnhence { get; set; }  // 是否增强
         public bool IsTriple { get; set; }   // 是否有第三弦杆
         public double Slop { set; get; }
+
+        public double BeginStation { get; }
+        public double EndStation { get; }
+
+        public string BS
+        {
+            get
+            {
+                return string.Format("{0:F0}+{1:F2}",(int)(BeginStation/1000),BeginStation-((int)(BeginStation / 1000))*1000.0);
+            }
+        }
+        public string ES
+        {
+            get
+            {
+                return string.Format("{0:F0}+{1:F2}", (int)(EndStation / 1000), EndStation - ((int)(EndStation / 1000)) * 1000.0);
+            }
+        }
+
         public bool IsValid
         {
             get
@@ -89,7 +108,7 @@ namespace ACADExt
         /// <param name="isE">是否加强</param>
         /// <param name="isT">是否第三弦杆</param>
         /// <param name="ss">纵坡</param>
-        public Bridge(int id, string nm, BridgeType brt, int col,int lay,int pc,bool isE, bool isT,double ss)
+        public Bridge(int id, string nm, BridgeType brt, int col,int lay,int pc,bool isE, bool isT,double ss,double bgs,double eds)
         {
             ID = id;
             Name = nm;
@@ -103,7 +122,8 @@ namespace ACADExt
             MatTab = GetMatTab();
             NumTab = GetTab("NumberTable.csv");
 
-
+            BeginStation = bgs;
+            EndStation = eds;
 
         }
         public Bridge(System.Data.DataTable theDT, int DalotId)
@@ -122,6 +142,9 @@ namespace ACADExt
             IsEnhence = (bool)theData["是否增强"] ;
             IsTriple = (bool)theData["是否有第三弦杆"];
             Slop = (double)theData["纵坡"] ;
+            BeginStation = (double)theData["BeginStation"];
+            EndStation = (double)theData["EndStation"];
+
             MatTab = GetMatTab();
             NumTab = GetTab("NumberTable.csv");
         }

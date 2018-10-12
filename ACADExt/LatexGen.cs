@@ -69,10 +69,23 @@ namespace ACADExt
                     sw.WriteLine("\\item[ULS-2:]1.1恒载+1.25温度效应+1.0活载");
                     sw.WriteLine("\\item[SLS-1:]1.0恒载+0.7活载+0.5温度效应");
                     sw.WriteLine("\\end{itemize}");
-                    sw.WriteLine("\\section{分析结果}");
-                    sw.WriteLine("\\subsection{极限承载能力验算结果}");
-                    sw.WriteLine("\\subsection{活载变形验算结果}");
-                    sw.WriteLine("\\end{document}");
+                    sw.WriteLine(@"\clearpage");
+                    sw.WriteLine(@"\section{分析结果}");
+                    sw.WriteLine(@"\subsection{极限承载能力验算结果}");
+                    sw.WriteLine("考虑ULS-1和ULS-2两种荷载组合，结构最不利应力云图如下图\\ref{fig:2}所示，其最大应力值139.92MPa，最小值-296.81MPa，均满足规范限值。");
+                    sw.WriteLine(@"\begin{figure}[!ht]");
+                    sw.WriteLine(@"\centering");
+                    sw.WriteLine(@"\includegraphics[width=0.6\textwidth]{pic/2.png}");
+                    sw.WriteLine(@"\caption{杆件等效应力云图\label{fig:2}}");
+                    sw.WriteLine(@"\end{figure}");
+                    sw.WriteLine(@"\subsection{活载变形验算结果}");
+                    sw.WriteLine(@"仅在活载作用下，桥梁竖向变形如下图所示，竖向变形约为26mm，小于澳洲标准1/600L=xxx的限值，满足规范要求。");
+                    sw.WriteLine(@"\begin{figure}[!ht]");
+                    sw.WriteLine(@"\centering");
+                    sw.WriteLine(@"\includegraphics[width=0.6\textwidth]{pic/3.png}");
+                    sw.WriteLine(@"\caption{桥梁竖向变形\label{fig:3}}");
+                    sw.WriteLine(@"\end{figure}");
+                    sw.WriteLine(@"\end{document}");
                 }
             }
         }

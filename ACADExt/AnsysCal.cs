@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -114,28 +115,6 @@ namespace ACADExt
             SectList = new List<Section>();
             int totbeam = bri.Pieces * 2 + 1;
             BeamToLoad = new List<int>() { (totbeam - 1) / 2 - 1, (totbeam - 1) / 2, (totbeam - 1) / 2 + 1 };
-
-            //if (bri.Pieces < 4)
-            //{
-            //    int totbeam = bri.Pieces * 2 + 1;
-            //    BeamToLoad = new List<int>() { (totbeam - 1) / 2 - 1, (totbeam - 1) / 2, (totbeam - 1) / 2 + 1 };
-            //}
-            //else if (bri.Pieces < 7)
-            //{
-            //    int midbeam = bri.Pieces;
-            //    BeamToLoad = new List<int>() { midbeam - 1, midbeam - 2, midbeam - 3, midbeam + 1, midbeam + 2, midbeam + 3 };
-            //}
-            //else if (bri.Pieces < 10)
-            //{
-            //    int midbeam = bri.Pieces;
-            //    BeamToLoad = new List<int>() { midbeam - 1, midbeam + 1, midbeam, midbeam - 3, midbeam - 4, midbeam - 5, midbeam + 3, midbeam + 4, midbeam + 5 };
-            //}
-            //else
-            //{
-            //    int midbeam = bri.Pieces;
-            //    BeamToLoad = new List<int>() { midbeam - 1, midbeam - 2, midbeam - 3, midbeam -5, midbeam - 6, midbeam - 7,
-            //         midbeam + 1, midbeam + 2, midbeam + 3, midbeam +5, midbeam +6, midbeam + 7 };
-            //}
         }
 
 
@@ -788,15 +767,25 @@ namespace ACADExt
                     sw.WriteLine("!=======================================================");
                     sw.WriteLine("finish");
                     sw.WriteLine("/CLEAR,START");
-                    sw.WriteLine("/CWD,'{0}'",filepath);                
-                    sw.WriteLine("!=======================================================");
+                    sw.WriteLine("/CWD,'{0}'",filepath);             
                     sw.WriteLine("/input,Prep,inp");
                     sw.WriteLine("/input,Sect,inp");
                     sw.WriteLine("/input,Node,inp");
                     sw.WriteLine("/input,Elem,inp");
                     sw.WriteLine("/input,Debug,inp");
                     sw.WriteLine("/input,Solu,inp");
-                    sw.WriteLine("/input,Post,inp");
+                    sw.WriteLine("/input,Post,inp");                    
+                    sw.WriteLine("!=======================================================");
+                    sw.WriteLine("finish");
+                    sw.WriteLine("/CLEAR,START");
+                    sw.WriteLine("/CWD,'{0}'", filepath);
+                    sw.WriteLine("/input,Prep,inp");
+                    sw.WriteLine("/input,Sect,inp");
+                    sw.WriteLine("/input,Node,inp");
+                    sw.WriteLine("/input,Elem,inp");
+                    sw.WriteLine("/input,Debug,inp");                    
+                    sw.WriteLine("/input,SM1600,inp");
+                    sw.WriteLine("/input,Post2,inp");
                 }
             }
         }
@@ -1087,25 +1076,112 @@ namespace ACADExt
                     sw.WriteLine("esel,r,type,,1");
                     sw.WriteLine("nsel,u,node,,9999");
                     sw.WriteLine("nsel,u,node,,8888");
-                    sw.WriteLine("/eshape,1");
-                    sw.WriteLine("eplot");
+                    sw.WriteLine("/eshape,1");                    
                     sw.WriteLine("/VIEW,1,1,1,1");
                     sw.WriteLine("/ANG,1");
                     sw.WriteLine("/REP,FAST");
                     sw.WriteLine("/AUTO,1");
-                    sw.WriteLine("/REP,FAST");
-                    sw.WriteLine(@"/IMAGE,save,'..\..\05 Latex\{0}\pic\1','png'", curBridge.Name);
+                    sw.WriteLine(@"/GRAPHICS,POWER");
+                    sw.WriteLine(@"/show,png,,");
+                    sw.WriteLine("eplot");
+                    sw.WriteLine(@"/show,close");
                     sw.WriteLine("etab,sdirA,smisc,31");
-                    sw.WriteLine("etab,sdirB,smisc,36");
-                    sw.WriteLine("plls,sdirA,sdirB,0.1");
+                    sw.WriteLine("etab,sdirB,smisc,36");                    
                     sw.WriteLine("/VIEW,1,,,1 ");
                     sw.WriteLine("/ANG,1  ");
                     sw.WriteLine("/REP,FAST   ");
-                    sw.WriteLine(@"/IMAGE,save,'..\..\05 Latex\{0}\pic\2','png'", curBridge.Name);
+                    sw.WriteLine(@"/GRAPHICS,POWER");
+                    sw.WriteLine(@"/show,png,,");
+                    sw.WriteLine("plls,sdirA,sdirB,0.1");
+                    sw.WriteLine(@"/show,close");
+                }
+            }
+        }
+
+
+        public void WritePost2(string filepath)
+        {
+            using (FileStream fs = new FileStream(Path.Combine(filepath, "Post2.inp"),
+                FileMode.Create, FileAccess.Write))
+            {
+                using (StreamWriter sw = new StreamWriter(fs))
+                {
+                    sw.WriteLine(@"/RGB,INDEX,100,100,100, 0");
+                    sw.WriteLine(@"/RGB,INDEX, 80, 80, 80,13");
+                    sw.WriteLine(@"/RGB,INDEX, 60, 60, 60,14");
+                    sw.WriteLine(@"/RGB,INDEX, 0, 0, 0,15");
+                    sw.WriteLine(@"/REPLOT");
+                    sw.WriteLine(@"/post1");
+                    sw.WriteLine(@"esel,s,mat,,1");
+                    sw.WriteLine(@"esel,r,type,,1");
+                    sw.WriteLine(@"esel,u,sec,,4");
+                    sw.WriteLine(@"nsel,u,node,,9999");
+                    sw.WriteLine(@"nsel,u,node,,8888");
+                    sw.WriteLine(@"/eshape,1");
+                    sw.WriteLine(@"/VIEW,1,,,1 ");
+                    sw.WriteLine(@"/ANG,1  ");
+                    sw.WriteLine(@"/EFACET,1    ");
+                    sw.WriteLine(@"/GRAPHICS,POWER");
+                    sw.WriteLine(@"/show,png,,");
+                    sw.WriteLine(@"PLNSOL, U,Y, 0,1.0  ");
+                    sw.WriteLine(@"/show,close");
 
                 }
             }
         }
+
+        public void RunAnsys(string  filepath)
+        {
+            string cmdA = string.Format("-dir \"{0}\" -b -i \"Main.inp\" -o \"res.out\"", filepath);
+            Ansys(cmdA,  filepath);
+        }
+
+
+        /// <summary>  
+        /// 执行DOS命令，返回DOS命令的输出  
+        /// </summary>  
+        /// <param name="dosCommand">dos命令</param>  
+        /// <param name="milliseconds">等待命令执行的时间（单位：毫秒），  
+        /// 如果设定为0，则无限等待</param>  
+        /// <returns>返回DOS命令的输出</returns>  
+        public static string Ansys(string args, string wdir)
+        {
+            string output = ""; //输出字符串  
+            if (args != null && !args.Equals(""))
+            {
+                Process process = new Process();//创建进程对象  
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+                startInfo.FileName = "D:\\Program Files\\ANSYS Inc\\v170\\ansys\\bin\\winx64\\ANSYS170.exe";//设定需要执行的命令  
+                startInfo.Arguments =  args;//“/C”表示执行完命令后马上退出  
+                startInfo.UseShellExecute = false;//不使用系统外壳程序启动  
+                //startInfo.RedirectStandardInput = true;//不重定向输入  
+                startInfo.RedirectStandardOutput = true; //重定向输出  
+                //startInfo.CreateNoWindow = true;//不创建窗口  
+                startInfo.WorkingDirectory = wdir;
+                process.StartInfo = startInfo;
+                try
+                {
+                    if (process.Start())//开始进程  
+                    {
+                        process.WaitForExit();//这里无限等待进程结束  
+                        output = process.StandardOutput.ReadToEnd();//读取进程的输出  
+                    }
+                }
+                catch
+                {
+                }
+                finally
+                {
+                    if (process != null)
+                    {
+                        process.Close();
+                    }                    
+                }
+            }
+            return output;
+        }
+
+
 
 
 

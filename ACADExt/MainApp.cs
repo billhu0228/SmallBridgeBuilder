@@ -127,6 +127,7 @@ namespace ACADExt
                 TextPloter.PrintNumTitle(db, Point3d.Origin.Convert3D(0, (ii - 1) * (-297), 0), TheBridge);
                 TextPloter.PrintNote(db, Point3d.Origin.Convert3D(360, (ii - 1) * (-297)+40, 0));
                 TextPloter.PrintNote2(db, Point3d.Origin.Convert3D(250+420, (ii - 1) * (-297) + 62, 0));
+                TextPloter.PrintFName(db, Point3d.Origin.Convert3D(0, (ii - 1) * (-297), 0), TheBridge);
                 // 视口
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
@@ -155,6 +156,8 @@ namespace ACADExt
 
                 TheBridge.PlotMatTB(db, Point2d.Origin.Convert2D(420 + 620, (ii - 1) * (-297) + 240));
 
+
+                break;
 
             }
 
@@ -219,13 +222,22 @@ namespace ACADExt
                 bill.WriteSolu(wdir);
                 bill.WriteSM1600(wdir);
                 bill.WritePost(wdir);
-              
+
+                bill.RunAnsys(wdir);
+
+
 
 
                 LatexGen kitty = new LatexGen(TheBridge);
-                string filewdir=kitty.GetReady(latexDir);
+                string filewdir = kitty.GetReady(latexDir);
                 kitty.WriteTex(filewdir);
-                //kitty.RunXeLatex(filewdir, Path.Combine(filewdir,"CalSheet.tex"));
+
+                File.Copy(Path.Combine(wdir, "file000.png"), Path.Combine(filewdir, "pic", "1.png"));
+                File.Copy(Path.Combine(wdir, "file001.png"), Path.Combine(filewdir, "pic", "2.png"));
+                File.Copy(Path.Combine(wdir, "file002.png"), Path.Combine(filewdir, "pic", "3.png"));
+
+
+                kitty.RunXeLatex(filewdir, Path.Combine(filewdir, "CalSheet.tex"));
 
 
                 break;

@@ -20,6 +20,9 @@ namespace ACADExt
     {
 
 
+
+
+
         public static void PrintNumTitle(Database db, Point3d PaperOrigenPoint,Bridge theBridge)
         {
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -140,7 +143,70 @@ namespace ACADExt
             return;
         }
 
+        public static void PrintFName(Database db, Point3d InsertPoint,Bridge bridge)
+        {
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                TextStyleTable st = tr.GetObject(db.TextStyleTableId, OpenMode.ForRead) as TextStyleTable;
+                BlockTable blockTbl = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord recorder = tr.GetObject(blockTbl[BlockTableRecord.PaperSpace], OpenMode.ForWrite) as BlockTableRecord;
 
+                DBText title = new DBText();
+                title.TextString = bridge.Name;
+                title.Position = InsertPoint.Convert3D(108.3735, 17.5);
+                title.Height = 3;
+                title.HorizontalMode = TextHorizontalMode.TextCenter;
+                title.VerticalMode = TextVerticalMode.TextVerticalMid;
+                title.AlignmentPoint = title.Position;
+                title.Layer = "标注";
+                title.TextStyleId = st["仿宋"];
+                title.WidthFactor = 0.8;
+                recorder.AppendEntity(title);
+                tr.AddNewlyCreatedDBObject(title, true);
+
+                title = new DBText();
+                title.TextString = string.Format("{0}-{1}",bridge.BS,bridge.ES);
+                title.Position = InsertPoint.Convert3D(108.3735, 17.5-5);
+                title.Height = 3;
+                title.HorizontalMode = TextHorizontalMode.TextCenter;
+                title.VerticalMode = TextVerticalMode.TextVerticalMid;
+                title.AlignmentPoint = title.Position;
+                title.Layer = "标注";
+                title.TextStyleId = st["仿宋"];
+                title.WidthFactor = 0.8;
+                recorder.AppendEntity(title);
+                tr.AddNewlyCreatedDBObject(title, true);
+
+
+                title = new DBText();
+                title.TextString = bridge.Name;
+                title.Position = InsertPoint.Convert3D(108.3735+420, 17.5);
+                title.Height = 3;
+                title.HorizontalMode = TextHorizontalMode.TextCenter;
+                title.VerticalMode = TextVerticalMode.TextVerticalMid;
+                title.AlignmentPoint = title.Position;
+                title.Layer = "标注";
+                title.TextStyleId = st["仿宋"];
+                title.WidthFactor = 0.8;
+                recorder.AppendEntity(title);
+                tr.AddNewlyCreatedDBObject(title, true);
+
+                title.TextString = string.Format("{0}-{1}", bridge.BS, bridge.ES);
+                title.Position = InsertPoint.Convert3D(108.3735+420, 17.5 - 5);
+                title.Height = 3;
+                title.HorizontalMode = TextHorizontalMode.TextCenter;
+                title.VerticalMode = TextVerticalMode.TextVerticalMid;
+                title.AlignmentPoint = title.Position;
+                title.Layer = "标注";
+                title.TextStyleId = st["仿宋"];
+                title.WidthFactor = 0.8;
+                recorder.AppendEntity(title);
+                tr.AddNewlyCreatedDBObject(title, true);
+
+                tr.Commit();
+            }
+            return;
+        }
 
 
         public static void PrintLineText(Database db,Point2d StartPoint, Point2d EndPoint,string[] textList,bool isLeft=true,double scale = 100)

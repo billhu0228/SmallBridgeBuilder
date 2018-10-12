@@ -129,7 +129,7 @@ namespace ACADExt
                     {
                         dt.Columns.Add(new System.Data.DataColumn(name, typeof(int)));
                     }
-                    else if(name == "纵坡" )
+                    else if(name == "纵坡" || name == "BeginStation" || name == "EndStation")
                     {
                         dt.Columns.Add(new System.Data.DataColumn(name, typeof(double)));
                     }
